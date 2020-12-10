@@ -11,6 +11,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <asm/unistd.h>
+#include <aio.h>
 #include <inttypes.h>
 #include <sched.h>
 #include <sys/time.h>

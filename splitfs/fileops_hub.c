@@ -177,7 +177,7 @@ int _hub_add_and_resolve_fileops_tree_from_file(char* filename)
 		if(cmp_match) {
 			DEBUG("Module %s was already in the list; skipping.\n", tok);
 		} else {
-		//	DEBUG("Adding module %s\n", tok);
+			MSG("Adding module %s\n", tok);
 			modules_to_load[module_count] = calloc(strlen(tok)+1, sizeof(char));
 			memcpy(modules_to_load[module_count], tok, strlen(tok)+1);
 			module_count++;
@@ -275,6 +275,9 @@ RETT_FOPEN64  _hub_FOPEN64(INTF_FOPEN64);
 
 RETT_IOCTL ALIAS_IOCTL(INTF_IOCTL) WEAK_ALIAS("_hub_IOCTL");
 RETT_IOCTL  _hub_IOCTL(INTF_IOCTL);
+
+// RETT_AIO_READ ALIAS_AIO_READ(INTF_AIO_READ) WEAK_ALIAS("_hub_AIO_READ");
+// RETT_AIO_READ  _hub_AIO_READ(INTF_AIO_READ);
 
 RETT_OPEN64 ALIAS_OPEN64(INTF_OPEN64) WEAK_ALIAS("_hub_OPEN64");
 RETT_OPEN64  _hub_OPEN64(INTF_OPEN64);
@@ -1336,6 +1339,16 @@ RETT_IOCTL _hub_IOCTL(INTF_IOCTL)
 	return result;
 }
 
+// RETT_AIO_READ _hub_AIO_READ(INTF_AIO_READ)
+// {
+// 	CHECK_RESOLVE_FILEOPS(_hub_);
+
+// 	DEBUG_FILE("CALL: _hub_AIO_READ\n");
+
+// 	//RETT_IOCTL result = _hub_fileops->
+// 	//DEBUG_FILE("%s: Return = %d\n", __func__, result);
+// 	return 0;
+// }
 RETT_OPEN64 _hub_OPEN64(INTF_OPEN64)
 {
 	CHECK_RESOLVE_FILEOPS(_hub_);

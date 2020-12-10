@@ -5874,6 +5874,15 @@ RETT_WRITEV _nvp_WRITEV(INTF_WRITEV)
 	return 0;
 }
 
+RETT_AIO_READ _nvp_AIO_READ(INTF_AIO_READ)
+{
+	CHECK_RESOLVE_FILEOPS(_nvp_);
+	MSG("CALL: _nvp_AIO_READ\n");
+	
+	_nvp_PREAD(CALL_AIO_READ->aio_fildes, CALL_AIO_READ->aio_buf, CALL_AIO_READ->aio_nbytes, CALL_AIO_READ->aio_offset);
+
+}
+
 RETT_DUP _nvp_DUP(INTF_DUP)
 {
 	DEBUG("_nvp_DUP(" PFFS_DUP ")\n", CALL_DUP);

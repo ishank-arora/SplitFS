@@ -18,6 +18,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdio.h>
+#include <aio.h>
 #include <sys/mman.h>
 #include <errno.h>
 #include <stdarg.h>
@@ -85,7 +86,7 @@ int execv_done;
 
 #ifdef TRACE_FP_CALLS				
 
-#define ALLOPS_FINITEPARAMS_WPAREN (READ) (FREAD) (CLEARERR) (FEOF) (FERROR) (WRITE) (FWRITE) (FSEEK) (FTELL) (FTELLO) (CLOSE) (FCLOSE) (SEEK) (FTRUNC) (DUP) (DUP2) (FORK) (VFORK) (READV) (WRITEV) (PIPE) (SOCKETPAIR) OPS_FINITEPARAMS_64 (PREAD) (PWRITE) (FSYNC) (FDSYNC) (SOCKET) (ACCEPT) (UNLINK) (UNLINKAT)
+#define ALLOPS_FINITEPARAMS_WPAREN (READ) (FREAD) (CLEARERR) (FEOF) (FERROR) (WRITE) (FWRITE) (FSEEK) (FTELL) (FTELLO) (CLOSE) (FCLOSE) (SEEK) (FTRUNC) (DUP) (DUP2) (FORK) (VFORK) (READV) (WRITEV) (PIPE) (SOCKETPAIR) OPS_FINITEPARAMS_64 (PREAD) (PWRITE) (FSYNC) (FDSYNC) (SOCKET) (ACCEPT) (UNLINK) (UNLINKAT) (AIO_READ)
 //(POSIX_FALLOCATE) (POSIX_FALLOCATE64) (FALLOCATE) (STAT) (STAT64) (FSTAT) (FSTAT64) (LSTAT) (LSTAT64)
 #define ALLOPS_WPAREN (OPEN) (OPENAT) (CREAT) (EXECVE) (EXECVP) (EXECV) (FOPEN) (FOPEN64) (IOCTL) (TRUNC) (MKNOD) (MKNODAT) ALLOPS_FINITEPARAMS_WPAREN
 #define SHM_WPAREN (SHM_COPY)
@@ -94,7 +95,7 @@ int execv_done;
 
 #else
 
-#define ALLOPS_FINITEPARAMS_WPAREN (READ) (WRITE) (CLOSE) (SEEK) (FTRUNC) (DUP) (DUP2) (FORK) (VFORK) (READV) (WRITEV) (PIPE) (SOCKETPAIR) OPS_FINITEPARAMS_64 (PREAD) (PWRITE) (FSYNC) (FDSYNC) (SOCKET) (ACCEPT) (UNLINK) (UNLINKAT)
+#define ALLOPS_FINITEPARAMS_WPAREN (READ) (WRITE) (CLOSE) (SEEK) (FTRUNC) (DUP) (DUP2) (FORK) (VFORK) (READV) (WRITEV) (PIPE) (SOCKETPAIR) OPS_FINITEPARAMS_64 (PREAD) (PWRITE) (FSYNC) (FDSYNC) (SOCKET) (ACCEPT) (UNLINK) (UNLINKAT) (AIO_READ)
 //(POSIX_FALLOCATE) (POSIX_FALLOCATE64) (FALLOCATE) (STAT) (STAT64) (FSTAT) (FSTAT64) (LSTAT) (LSTAT64)
 #define ALLOPS_WPAREN (OPEN) (OPENAT) (CREAT) (EXECVE) (EXECVP) (EXECV) (IOCTL) (TRUNC) (MKNOD) (MKNODAT) ALLOPS_FINITEPARAMS_WPAREN
 #define SHM_WPAREN (SHM_COPY)
@@ -102,7 +103,7 @@ int execv_done;
 
 #endif
 
-#define FILEOPS_WITH_FD (READ) (WRITE) (SEEK) (READV) (WRITEV) (FTRUNC) (FTRUNC64) (SEEK64) (PREAD) (PWRITE) (FSYNC) (FDSYNC)
+#define FILEOPS_WITH_FD (READ) (WRITE) (SEEK) (READV) (WRITEV) (FTRUNC) (FTRUNC64) (SEEK64) (PREAD) (PWRITE) (FSYNC) (FDSYNC) 
 //(POSIX_FALLOCATE) (POSIX_FALLOCATE64) (FALLOCATE) (FSTAT) (FSTAT64)
 
 #ifdef TRACE_FP_CALLS				
@@ -226,12 +227,11 @@ struct Fileops_p* default_resolve_fileops(char* tree, char* name);
 #define ALIAS_MMAP   mmap
 #define ALIAS_READV  readv
 #define ALIAS_WRITEV writev
-#define ALIAS_PIPE   pipe
-#define ALIAS_SOCKETPAIR   socketpair
-#define ALIAS_IOCTL  ioctl
-#define ALIAS_MUNMAP munmap
-#define ALIAS_MSYNC  msync
-#define ALIAS_CLONE  __clone
+#define ALIAS_PIPE pipe
+#define ALIAS_SOCKETPAIR socketpair
+#define ALIAS_IOCTL ioctl
+#define ALIAS_AIO_READ aio_read
+#define ALIAS_AIO_WRITE aio_write 
 #define ALIAS_PREAD  pread64
 #define ALIAS_PWRITE pwrite64
 //#define ALIAS_PWRITESYNC pwrite64_sync
@@ -305,6 +305,8 @@ struct Fileops_p* default_resolve_fileops(char* tree, char* name);
 #define RETT_MMAP   void*
 #define RETT_READV  ssize_t
 #define RETT_WRITEV ssize_t
+#define RETT_AIO_READ int
+#define RETT_AIO_WRITE int
 #define RETT_PIPE   int
 #define RETT_SOCKETPAIR   int
 #define RETT_IOCTL  int
@@ -384,6 +386,8 @@ struct Fileops_p* default_resolve_fileops(char* tree, char* name);
 #define INTF_MMAP   void *addr, size_t len, int prot, int flags, int file, off_t off
 #define INTF_READV  int file, const struct iovec *iov, int iovcnt
 #define INTF_WRITEV int file, const struct iovec *iov, int iovcnt
+#define INTF_AIO_READ struct aiocb *aiocbp 
+#define INTF_AIO_WRITE struct aiocb *aiocbp
 #define INTF_PIPE   int file[2]
 #define INTF_SOCKETPAIR   int domain, int type, int protocol, int sv[2]
 #define INTF_IOCTL  int file, unsigned long int request, ...
@@ -463,6 +467,8 @@ struct Fileops_p* default_resolve_fileops(char* tree, char* name);
 #define CALL_MMAP   addr, len, prot, flags, file, off
 #define CALL_READV  file, iov, iovcnt
 #define CALL_WRITEV file, iov, iovcnt
+#define CALL_AIO_READ aiocbp
+#define CALL_AIO_WRITE aiocbp
 #define CALL_PIPE   file
 #define CALL_SOCKETPAIR   domain, type, protocol, sv
 #define CALL_MUNMAP addr, len
@@ -538,6 +544,8 @@ struct Fileops_p* default_resolve_fileops(char* tree, char* name);
 #define PFFS_MMAP   "%p, %i, %i, %i, %i"
 #define PFFS_READV  "%i, %p, %i"
 #define PFFS_WRITEV "%i, %p, %i"
+#define PFFS_AIO_READ "p"
+#define PFFS_AIO_WRITE "p"
 #define PFFS_PIPE   "%p"
 #define PFFS_SOCKETPAIR  "%i, %i, %i, %p"
 #define PFFS_IOCTL  "%i, %i"
@@ -621,6 +629,8 @@ struct Fileops_p* default_resolve_fileops(char* tree, char* name);
 #define STD_MMAP64 __mmap64
 #define STD_READV  __readv
 #define STD_WRITEV __writev
+#define STD_AIO_READ __aio_read
+#define STD_AIO_WRITE __aio_write
 #define STD_PIPE   __pipe
 #define STD_SOCKETPAIR   __socketpair
 #define STD_IOCTL  __ioctl
